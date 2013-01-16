@@ -1,0 +1,105 @@
+<project name="json2html" basedir="." default="compile-debug">
+    <dirname property="json2html.dir" file="${ant.file.json2html}"/>
+    <property name="work.dir" location="${json2html.dir}/.." />
+    <include file="${work.dir}/ydn/build.xml"/>
+    <property name="code-ver" value="11"/>
+    <property name="ver" value="0.${code-ver}"/>
+    <target name="all-test" description="generate all test js">
+        <gen-js-test base.dir="${json2html.dir}/test"></gen-js-test>
+    </target>
+    <property name="output.dir" value="${json2html.dir}/jsc"/>
+    <property name="output.fn" value="ydn.jshtml-${ver}.js"/>
+    <target name="compile" description="compile JS">
+        <property name="default_path" value="''"/>
+
+        <closure-compile compilationlevel="ADVANCED_OPTIMIZATIONS"
+                         base.dir="${json2html.dir}/js"
+                         input="${json2html.dir}/js/main.js"
+                         input.dir="${json2html.dir}/js"
+                         output.fn="${output.dir}/${output.fn}">
+            <extrapaths>
+
+                <arg line='-p "${work.dir}/ydn-base/js"'/>
+                <arg line='-p "${json2html.dir}/js"'/>
+            </extrapaths>
+            <options>
+                <arg line='-f "--source_map_format=V3"'/>
+                <arg line='-f "--create_source_map=${output.dir}/${output.fn}.map"'/>
+                <arg line='-f "--externs=${ydn.dir}/externs/ydn-server.js"'/>
+                <arg line='-f "--externs=${ydn-base.dir}/externs/misc.js"'/>
+                <arg line='-f "--closure_entry_point=ydn.jshtml.Transformer"'/>
+                <arg line='-f "--define=goog.DEBUG=false"'/>
+                <arg line='-f "--output_wrapper=${outputwrapper.norun}"'/>
+            </options>
+        </closure-compile>
+        <concat destfile="${output.dir}/${output.fn}" append="true">
+            //@ sourceMappingURL=${output.fn}.map
+        </concat>
+    </target>
+    <target name="compile-debug" description="compile JS">
+        <property name="default_path" value="''"/>
+
+        <closure-compile compilationlevel="ADVANCED_OPTIMIZATIONS"
+                         base.dir="${json2html.dir}/js"
+                         input="${json2html.dir}/js/main.js"
+                         input.dir="${json2html.dir}/js"
+                         output.fn="${output.dir}/${output.fn}">
+            <extrapaths>
+                <arg line='-p "${work.dir}/ydn-base/js"'/>
+                <arg line='-p "${json2html.dir}/js"'/>
+            </extrapaths>
+            <options>
+                <arg line='-f "--source_map_format=V3"'/>
+                <arg line='-f "--create_source_map=${output.dir}/${output.fn}.map"'/>
+                <arg line='-f "--externs=${ydn-base.dir}/externs/misc.js"'/>
+                <arg line='-f "--closure_entry_point=ydn.jshtml.Transformer"'/>
+                <arg line='-f "--output_wrapper=${outputwrapper.norun}"'/>
+            </options>
+        </closure-compile>
+        <concat destfile="${output.dir}/${output.fn}" append="true">
+            //@ sourceMappingURL=${output.fn}.map
+        </concat>
+    </target>
+
+    <target name="deps" description="list dependency files">
+        <delete file="${json2html.dir}/js/deps.js"/>
+        <calc-deps
+                input.dir="${json2html.dir}/js"
+                output.fn="${json2html.dir}/js/deps.js">
+        </calc-deps>
+    </target>
+    <target name="jstd" description="print out jstd file for JS test driver">
+
+        <jstd-gen base.dir="${json2html.dir}">
+
+            <deps-options>
+                <arg line='--path "${json2html.dir}/js"'/>
+            </deps-options>
+
+        </jstd-gen>
+    </target>
+
+    <target name="gen-html" description="Generate HTML from soy template">
+        <gen-soy-web output.fn="${json2html.dir}/privacy.html"
+                     namespace="templ.ydn.json2html.html.render"
+                     templ.dir="${json2html.dir}/templ"
+                     content-file="${json2html.dir}/test1.html">
+        </gen-soy-web>
+
+    </target>
+
+    <target name="templ" description="compile templates">
+        <property name="templ.dir" location="${json2html.dir}/templ" />
+        <fileset dir="${json2html.dir}/templ" id="templ.files">
+            <include name="**/*.soy"/>
+        </fileset>
+        <pathconvert pathsep="' '"  property="templfiles" refid="templ.files" dirsep="/">
+            <map from="${json2html.dir}/templ/" to=""/>
+        </pathconvert>
+        <generate-wedget-template filename="${templfiles}"
+                                  input.dir="${templ.dir}"
+                                  output.dir="${json2html.dir}/js/templ/"/>
+
+
+    </target>
+</project>
